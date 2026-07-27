@@ -6,6 +6,9 @@
 // ('restless' and 'panic' reuse the 'building'/'frantic' pools respectively —
 // see GIF_STAGE_FALLBACK in ChaosOverlay.jsx — until they get their own.)
 //
+// The 'calm' stage isn't here — it runs for days, so a fixed list would go
+// stale fast. It fetches a live random meme instead; see randomMeme.js.
+//
 // Broken/expired links are handled gracefully (see SafeGif.jsx) — a 404 just
 // makes that entry silently skip itself, so it's safe to swap links in/out
 // without double-checking every one of them.

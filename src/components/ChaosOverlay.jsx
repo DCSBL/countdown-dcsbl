@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import confetti from 'canvas-confetti'
 import { GIPHY_LINKS } from '../giphyLinks'
+import { fetchRandomCalmMeme } from '../randomMeme'
 import { SafeGif } from './SafeGif'
 
 const EMOJI_BY_STAGE = {
@@ -89,6 +90,14 @@ const SPAWN_INTERVAL_MIN_MS = 350
 const CONFETTI_BURSTS = 40
 const CONFETTI_INTERVAL_MS = 350
 
+// Calm stage: an occasional gif, not the chaos spawn loop above. Randomized
+// around a ~15 min average, with a rolling-hour cap as a backstop in case a
+// run of short random gaps would otherwise clear it.
+const CALM_MIN_INTERVAL_MS = 10 * 60 * 1000
+const CALM_MAX_INTERVAL_MS = 20 * 60 * 1000
+const CALM_MAX_PER_HOUR = 4
+const HOUR_MS = 60 * 60 * 1000
+
 let nextItemId = 0
 
 export function ChaosOverlay({ stage, intensity }) {
@@ -150,6 +159,53 @@ export function ChaosOverlay({ stage, intensity }) {
     return () => {
       cancelled = true
       clearTimeout(spawnTimeoutId)
+    }
+  }, [stage])
+
+  useEffect(() => {
+    if (stage !== 'calm') return undefined
+
+    let cancelled = false
+    let timeoutId = null
+    const spawnTimestamps = []
+
+    async function spawnCalmMeme() {
+      const url = await fetchRandomCalmMeme()
+      if (cancelled || !url) return
+
+      const id = nextItemId++
+      const left = Math.random() * 90
+      const duration = 9 + Math.random() * 4
+      const size = 90 + Math.random() * 90
+
+      setItems((current) => [...current, { id, type: 'gif', url, left, duration, size }])
+      setTimeout(() => {
+        setItems((current) => current.filter((entry) => entry.id !== id))
+      }, duration * 1000)
+    }
+
+    function scheduleNext() {
+      const delay =
+        CALM_MIN_INTERVAL_MS + Math.random() * (CALM_MAX_INTERVAL_MS - CALM_MIN_INTERVAL_MS)
+      timeoutId = setTimeout(() => {
+        if (cancelled) return
+        const now = Date.now()
+        while (spawnTimestamps.length && now - spawnTimestamps[0] > HOUR_MS) {
+          spawnTimestamps.shift()
+        }
+        if (spawnTimestamps.length < CALM_MAX_PER_HOUR) {
+          spawnTimestamps.push(now)
+          spawnCalmMeme()
+        }
+        scheduleNext()
+      }, delay)
+    }
+
+    scheduleNext()
+
+    return () => {
+      cancelled = true
+      clearTimeout(timeoutId)
     }
   }, [stage])
 
