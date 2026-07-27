@@ -2,16 +2,20 @@ import { useEffect, useState } from 'react'
 import { computeWorkingRemaining } from '../utils/time'
 import {
   EIGHT_HOURS_MS,
-  FOUR_HOURS_MS,
+  SIX_HOURS_MS,
+  TWO_HOURS_MS,
   ONE_HOUR_MS,
   FIFTEEN_MIN_MS,
+  FIVE_MIN_MS,
 } from '../config'
 
 function getStage(totalMs) {
   if (totalMs <= 0) return 'done'
-  if (totalMs <= FIFTEEN_MIN_MS) return 'chaos'
+  if (totalMs <= FIVE_MIN_MS) return 'chaos'
+  if (totalMs <= FIFTEEN_MIN_MS) return 'panic'
   if (totalMs <= ONE_HOUR_MS) return 'frantic'
-  if (totalMs <= FOUR_HOURS_MS) return 'building'
+  if (totalMs <= TWO_HOURS_MS) return 'restless'
+  if (totalMs <= SIX_HOURS_MS) return 'building'
   if (totalMs <= EIGHT_HOURS_MS) return 'mild'
   return 'calm'
 }

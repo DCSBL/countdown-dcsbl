@@ -7,21 +7,87 @@ const EMOJI_BY_STAGE = {
   calm: [],
   mild: ['💼', '🕐', '📅'],
   building: ['🚪', '👋', '⏳', '💼'],
+  restless: ['⏳', '🕐', '👋', '🚪', '😬'],
   frantic: ['🎉', '🚀', '🕐', '👋', '🏖️'],
+  panic: ['😱', '🔥', '🎉', '🚀', '🏃'],
   chaos: ['🎉', '🥳', '🚀', '🏖️', '👋', '➡️', '🚪'],
-  done: ['🎉', '🥳', '🚀', '🏖️', '👋', '➡️', '🎊', '🕺'],
+  done: ['🎉', '🥳', '🚀', '🏖️', '👋', '➡️', '🎊', '🕺', '🍾', '🦅', '🔥', '🎆'],
+}
+
+// Gif pools reuse a neighboring stage's vibe for stages that don't have
+// their own curated Giphy entries yet (see giphyLinks.js).
+const GIF_STAGE_FALLBACK = {
+  restless: 'building',
+  panic: 'frantic',
 }
 
 const BANNER_BY_STAGE = {
-  frantic: 'NOG EVEN GEDULD... LAATSTE UUR! 🕐',
-  chaos: '🎉 BIJNA VRIJ! LAATSTE MINUTEN! 🎉',
-  done: '🎉 KLAAR MEE! OP NAAR HET VOLGENDE AVONTUUR! 🚀',
-}
+  mild: [
+    'Nog eventjes doorbijten... 💼',
+    'De klok tikt door 🕐',
+    'Nog heel eventjes normaal doen 😐',
+    'I am ready to face any challenges that might be foolish enough to face me.',
+    'Making the world a better place...💻',
+    'Nog een paar standups te gaan 📅',
+    'Rustig aan, we zijn er nog lang niet 🐌',
+  ],
+  building: [
+    'Het einde komt in zicht 👋',
+    'Tas alvast inpakken? 🎒',
+    'Bestand opgeslagen. Klaar voor vandaag? 💾',
+    'Cool, cool, cool, cool, cool. No doubt, no doubt.',
+    'Always blue! Always blue!" ',
+    'De vrijdagmiddag-energie komt eraan 🕺',
+  ],
+  restless: [
+    'Nog maar 2 uur te gaan! ⏳',
+    'Nog wel doen alsof je werkt 🎭',
+    'Elke 5 minuten de klok checken 👀',
+    'I\'m not superstitious, but I am a little stitious.',
+    'My code is compiling..." ',
+    'De rekenmachine staat al klaar voor het aftellen 🧮',
+  ],
+  frantic: [
+    'NOG EVEN GEDULD... LAATSTE UUR! ☕',
+    'Laatste mailtjes wegwerken 📧',
+    'De jas ligt al over de stoel 🧥',
+    'OH MY GOD! IT’S HAPPENING! EVERYBODY STAY CALM!',
+    'Everything is garbage. The never-ending trash fire of time.',
+    'Middle-out compression level focus ⚡',
+    'Nog één dingetje afmaken... en nog één... 🔁',
+  ],
+  panic: [
+    '15 MINUTEN! PANIEK! 😱',
+    'Laptop dichtklappen in 3... 2... 💻',
+    'Alarm gezet? Check. Jas aan? Check. 🧥',
+    'PARKOUR!',
+    'HOT DAMN!',
+    'Pied Piper server status: CRITICAL 🔥',
+    'Elke seconde voelt als een uur nu ⏱️',
+  ],
+  chaos: [
+    '🎉 BIJNA VRIJ! LAATSTE MINUTEN! 🎉',
+    'VIJF... VIER... DRIE... 🔥',
+    'BINGPOT!',
+    'THREAT LEVEL MIDNIGHT!"',
+    'De deur is al in zicht 🚪',
+  ],
+  done: [
+    '🎉 KLAAR MEE! VAKANTIE! 🚀',
+    'GENIET ERVAN! 🏖️',
+    'WE ZIJN VRIJ WE ZIJN VRIJ WE ZIJN VRIJ 🎆🎆🎆',
+    'NOOIT MEER TERUG 😎',
+    'PIVOT! PIVOT!" ',
+    'Terry loves the weekend!" ',
+    '364 days until next Pretzel Day...',
+    'Welcome to the Tres Comas Club!" ',
+  ],
+};
 
 const SPAWN_INTERVAL_MAX_MS = 3800
 const SPAWN_INTERVAL_MIN_MS = 350
-const CONFETTI_BURSTS = 20
-const CONFETTI_INTERVAL_MS = 600
+const CONFETTI_BURSTS = 40
+const CONFETTI_INTERVAL_MS = 350
 
 let nextItemId = 0
 
@@ -42,11 +108,14 @@ export function ChaosOverlay({ stage, intensity }) {
     let cancelled = false
     let spawnTimeoutId = null
 
-    function spawn() {
+    function spawnOne() {
       const emojiPool = EMOJI_BY_STAGE[stage] ?? []
-      const gifPool = GIPHY_LINKS.filter((link) => !link.stage || link.stage === stage)
+      const gifStage = GIF_STAGE_FALLBACK[stage] ?? stage
+      const gifPool = GIPHY_LINKS.filter((link) => !link.stage || link.stage === gifStage)
       const useGif = gifPool.length > 0 && Math.random() < 0.3
       const id = nextItemId++
+      const gifSizeMin = stage === 'done' ? 110 : 80
+      const gifSizeRange = stage === 'done' ? 110 : 90
 
       const item = useGif
         ? { id, type: 'gif', url: gifPool[Math.floor(Math.random() * gifPool.length)].url }
@@ -54,12 +123,19 @@ export function ChaosOverlay({ stage, intensity }) {
 
       const left = Math.random() * 90
       const duration = 7 + Math.random() * 5
-      const size = useGif ? 40 + Math.random() * 40 : 28 + Math.random() * 28
+      const size = useGif
+        ? gifSizeMin + Math.random() * gifSizeRange
+        : 28 + Math.random() * 28
 
       setItems((current) => [...current, { ...item, left, duration, size }])
       setTimeout(() => {
         setItems((current) => current.filter((entry) => entry.id !== id))
       }, duration * 1000)
+    }
+
+    function spawn() {
+      spawnOne()
+      if (stage === 'done') spawnOne()
 
       const interval =
         SPAWN_INTERVAL_MAX_MS -
@@ -83,9 +159,9 @@ export function ChaosOverlay({ stage, intensity }) {
     let count = 0
     const id = setInterval(() => {
       confetti({
-        particleCount: 120,
-        spread: 100,
-        startVelocity: 45,
+        particleCount: 220,
+        spread: 160,
+        startVelocity: 65,
         origin: { x: Math.random(), y: Math.random() * 0.3 },
       })
       count += 1
@@ -95,7 +171,7 @@ export function ChaosOverlay({ stage, intensity }) {
     return () => clearInterval(id)
   }, [stage])
 
-  const banner = BANNER_BY_STAGE[stage]
+  const banners = BANNER_BY_STAGE[stage]
 
   return (
     <div className={`chaos-overlay stage-${stage}`} aria-hidden="true">
@@ -120,12 +196,12 @@ export function ChaosOverlay({ stage, intensity }) {
         ),
       )}
 
-      {banner && (
+      {banners && (
         <div className="marquee">
           <div className="marquee-track">
-            <span>{banner}</span>
-            <span>{banner}</span>
-            <span>{banner}</span>
+            {[0, 1, 2].map((rep) =>
+              banners.map((line, i) => <span key={`${rep}-${i}`}>{line}</span>),
+            )}
           </div>
         </div>
       )}

@@ -35,6 +35,7 @@
   opacity: 0;
 }
 
+.chaos-overlay.stage-panic .bg-layer::after,
 .chaos-overlay.stage-chaos .bg-layer::after,
 .chaos-overlay.stage-done .bg-layer::after {
   background: linear-gradient(
@@ -204,6 +205,10 @@
   animation: pulse-glow 3s ease-in-out infinite;
 }
 
+.countdown-box.stage-restless {
+  animation: pulse-glow 1.6s ease-in-out infinite;
+}
+
 @keyframes pulse-glow {
   0%,
   100% {
@@ -215,6 +220,7 @@
 }
 
 .countdown-box.stage-frantic,
+.countdown-box.stage-panic,
 .countdown-box.stage-chaos {
   animation: box-shake 0.5s infinite;
 }
@@ -302,7 +308,9 @@
   .floating-item,
   .marquee-track,
   .countdown-box.stage-building,
+  .countdown-box.stage-restless,
   .countdown-box.stage-frantic,
+  .countdown-box.stage-panic,
   .countdown-box.stage-chaos,
   .countdown-box.stage-done {
     animation: none;

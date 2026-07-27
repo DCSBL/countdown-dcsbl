@@ -3,6 +3,8 @@
 // 'desk flip' (plus a few more targeted phrases), 10 per stage. Each entry is
 // { url, stage }. `stage` must be one of:
 // 'mild' | 'building' | 'frantic' | 'chaos' | 'done'.
+// ('restless' and 'panic' reuse the 'building'/'frantic' pools respectively —
+// see GIF_STAGE_FALLBACK in ChaosOverlay.jsx — until they get their own.)
 //
 // Broken/expired links are handled gracefully (see SafeGif.jsx) — a 404 just
 // makes that entry silently skip itself, so it's safe to swap links in/out
