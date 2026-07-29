@@ -3,6 +3,7 @@ import confetti from 'canvas-confetti'
 import { GIPHY_LINKS } from '../giphyLinks'
 import { fetchRandomCalmMeme } from '../randomMeme'
 import { SafeGif } from './SafeGif'
+import doneVideo from '../assets/untitled_video.mp4'
 
 const EMOJI_BY_STAGE = {
   calm: [],
@@ -12,7 +13,7 @@ const EMOJI_BY_STAGE = {
   frantic: ['🎉', '🚀', '🕐', '👋', '🏖️'],
   panic: ['😱', '🔥', '🎉', '🚀', '🏃'],
   chaos: ['🎉', '🥳', '🚀', '🏖️', '👋', '➡️', '🚪'],
-  done: ['🎉', '🥳', '🚀', '🏖️', '👋', '➡️', '🎊', '🕺', '🍾', '🦅', '🔥', '🎆'],
+  done: ['🎉', '🥳', '🚀', '🏖️', '👋', '➡️', '🎊', '🕺', '🍾', '🦅', '🔥', '🎆', '🐬'],
 }
 
 // Gif pools reuse a neighboring stage's vibe for stages that don't have
@@ -69,7 +70,6 @@ const BANNER_BY_STAGE = {
   chaos: [
     '🎉 BIJNA VRIJ! LAATSTE MINUTEN! 🎉',
     'VIJF... VIER... DRIE... 🔥',
-    'BINGPOT!',
     'THREAT LEVEL MIDNIGHT!"',
     'De deur is al in zicht 🚪',
   ],
@@ -103,6 +103,7 @@ let nextItemId = 0
 export function ChaosOverlay({ stage, intensity }) {
   const [items, setItems] = useState([])
   const intensityRef = useRef(intensity)
+  const doneVideoRef = useRef(null)
 
   useEffect(() => {
     intensityRef.current = intensity
@@ -211,6 +212,22 @@ export function ChaosOverlay({ stage, intensity }) {
 
   useEffect(() => {
     if (stage !== 'done') return undefined
+    const video = doneVideoRef.current
+    if (!video) return undefined
+
+    video.muted = false
+    const playAttempt = video.play()
+    if (playAttempt) {
+      playAttempt.catch(() => {
+        // Autoplay with sound was blocked; fall back to a muted, silent loop.
+        video.muted = true
+        video.play().catch(() => {})
+      })
+    }
+  }, [stage])
+
+  useEffect(() => {
+    if (stage !== 'done') return undefined
 
     let count = 0
     const id = setInterval(() => {
@@ -232,6 +249,17 @@ export function ChaosOverlay({ stage, intensity }) {
   return (
     <div className={`chaos-overlay stage-${stage}`} aria-hidden="true">
       <div className="bg-layer" style={{ '--intensity': intensity }} />
+
+      {stage === 'done' && (
+        <video
+          ref={doneVideoRef}
+          className="bg-video"
+          src={doneVideo}
+          loop
+          playsInline
+          preload="auto"
+        />
+      )}
 
       {items.map((item) =>
         item.type === 'gif' ? (

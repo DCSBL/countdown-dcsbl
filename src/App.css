@@ -35,6 +35,16 @@
   opacity: 0;
 }
 
+.bg-video {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+}
+
 .chaos-overlay.stage-panic .bg-layer::after,
 .chaos-overlay.stage-chaos .bg-layer::after,
 .chaos-overlay.stage-done .bg-layer::after {
