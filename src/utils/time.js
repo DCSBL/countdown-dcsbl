@@ -38,7 +38,7 @@ export function amsterdamToUtcDate(year, month, day, hour, minute) {
 // The working day: 08:30-17:00 Amsterdam time, minus the 12:00-12:30 lunch
 // break, Monday through Friday. Outside these windows no working time passes,
 // so the countdown pauses through evenings, nights, weekends and lunch.
-const WORK_START = { hour: 6, minute: 30 }
+const WORK_START = { hour: 8, minute: 30 }
 const LUNCH_START = { hour: 12, minute: 0 }
 const LUNCH_END = { hour: 12, minute: 30 }
 const WORK_END = { hour: 17, minute: 0 }
