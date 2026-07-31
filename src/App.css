@@ -98,7 +98,8 @@
   top: 0;
   z-index: 2;
   animation: float-up var(--duration, 9s) linear forwards;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: pointer;
   line-height: 1;
 }
 
@@ -121,6 +122,59 @@
   100% {
     transform: translateY(-15vh) rotate(25deg);
     opacity: 0;
+  }
+}
+
+.floating-item.pop {
+  animation: pop-burst 0.22s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes pop-burst {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter: blur(0);
+  }
+  35% {
+    transform: scale(1.35);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0;
+    filter: blur(1px);
+  }
+}
+
+/* ---------- Pop score ---------- */
+
+.score-counter {
+  position: fixed;
+  right: 20px;
+  bottom: 58px;
+  z-index: 20;
+  pointer-events: none;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.score-value {
+  display: inline-block;
+  animation: score-bump 0.3s ease-out;
+}
+
+@keyframes score-bump {
+  0% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
@@ -316,6 +370,8 @@
   .bg-layer,
   .bg-layer::after,
   .floating-item,
+  .floating-item.pop,
+  .score-value,
   .marquee-track,
   .countdown-box.stage-building,
   .countdown-box.stage-restless,
