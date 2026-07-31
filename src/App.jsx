@@ -2,6 +2,7 @@ import { useCountdown } from './hooks/useCountdown'
 import { TARGET_DATE } from './config'
 import { CountdownBox } from './components/CountdownBox'
 import { ChaosOverlay } from './components/ChaosOverlay'
+import { Clippy } from './components/Clippy'
 import './App.css'
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
         stage={stage}
         intensity={intensity}
       />
+      <Clippy />
     </div>
   )
 }
