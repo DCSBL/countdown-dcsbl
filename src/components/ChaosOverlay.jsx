@@ -86,9 +86,10 @@ const BANNER_BY_STAGE = {
 };
 
 const POP_SCORE_STORAGE_KEY = 'countdown-pop-score'
+const POP_HIGH_SCORE_STORAGE_KEY = 'countdown-pop-highscore'
 
-function loadPopScore() {
-  const stored = Number(localStorage.getItem(POP_SCORE_STORAGE_KEY))
+function loadStoredCount(key) {
+  const stored = Number(localStorage.getItem(key))
   return Number.isFinite(stored) && stored > 0 ? stored : 0
 }
 
@@ -109,13 +110,37 @@ let nextItemId = 0
 
 export function ChaosOverlay({ stage, intensity }) {
   const [items, setItems] = useState([])
-  const [score, setScore] = useState(loadPopScore)
+  const [score, setScore] = useState(() => loadStoredCount(POP_SCORE_STORAGE_KEY))
+  const [highScore, setHighScore] = useState(() => loadStoredCount(POP_HIGH_SCORE_STORAGE_KEY))
+  const [flashDirection, setFlashDirection] = useState(null)
   const intensityRef = useRef(intensity)
   const doneVideoRef = useRef(null)
+  const poppedIdsRef = useRef(new Set())
 
   useEffect(() => {
     intensityRef.current = intensity
   }, [intensity])
+
+  useEffect(() => {
+    if (score > highScore) {
+      setHighScore(score)
+      localStorage.setItem(POP_HIGH_SCORE_STORAGE_KEY, String(score))
+    }
+  }, [score, highScore])
+
+  function handleNaturalExpiry(id) {
+    const wasPopped = poppedIdsRef.current.delete(id)
+    setItems((current) => current.filter((entry) => entry.id !== id))
+    if (wasPopped) return
+    if (document.visibilityState !== 'visible') return
+
+    setFlashDirection('down')
+    setScore((current) => {
+      const next = Math.max(0, current - 1)
+      localStorage.setItem(POP_SCORE_STORAGE_KEY, String(next))
+      return next
+    })
+  }
 
   useEffect(() => {
     if (stage === 'calm') {
@@ -132,8 +157,8 @@ export function ChaosOverlay({ stage, intensity }) {
       const gifPool = GIPHY_LINKS.filter((link) => !link.stage || link.stage === gifStage)
       const useGif = gifPool.length > 0 && Math.random() < 0.3
       const id = nextItemId++
-      const gifSizeMin = stage === 'done' ? 110 : 80
-      const gifSizeRange = stage === 'done' ? 110 : 90
+      const gifSizeMin = stage === 'done' ? 220 : 160
+      const gifSizeRange = stage === 'done' ? 220 : 180
 
       const item = useGif
         ? { id, type: 'gif', url: gifPool[Math.floor(Math.random() * gifPool.length)].url }
@@ -147,7 +172,7 @@ export function ChaosOverlay({ stage, intensity }) {
 
       setItems((current) => [...current, { ...item, left, duration, size }])
       setTimeout(() => {
-        setItems((current) => current.filter((entry) => entry.id !== id))
+        if (!cancelled) handleNaturalExpiry(id)
       }, duration * 1000)
     }
 
@@ -185,11 +210,11 @@ export function ChaosOverlay({ stage, intensity }) {
       const id = nextItemId++
       const left = Math.random() * 90
       const duration = 9 + Math.random() * 4
-      const size = 90 + Math.random() * 90
+      const size = 180 + Math.random() * 180
 
       setItems((current) => [...current, { id, type: 'gif', url, left, duration, size }])
       setTimeout(() => {
-        setItems((current) => current.filter((entry) => entry.id !== id))
+        if (!cancelled) handleNaturalExpiry(id)
       }, duration * 1000)
     }
 
@@ -253,6 +278,8 @@ export function ChaosOverlay({ stage, intensity }) {
   }, [stage])
 
   function popItem(id, event) {
+    poppedIdsRef.current.add(id)
+
     const rect = event.currentTarget.getBoundingClientRect()
     const originX = (rect.left + rect.width / 2) / window.innerWidth
     const originY = (rect.top + rect.height / 2) / window.innerHeight
@@ -279,6 +306,7 @@ export function ChaosOverlay({ stage, intensity }) {
       setItems((current) => current.filter((entry) => entry.id !== id))
     }, 240)
 
+    setFlashDirection('up')
     setScore((current) => {
       const next = current + 1
       localStorage.setItem(POP_SCORE_STORAGE_KEY, String(next))
@@ -346,10 +374,13 @@ export function ChaosOverlay({ stage, intensity }) {
         </div>
       )}
 
-      {score > 0 && (
+      {highScore > 0 && (
         <div className="score-counter">
-          <span key={score} className="score-value">
-            {score}
+          <span
+            key={score}
+            className={`score-value${flashDirection === 'down' ? ' score-flash-red' : ''}`}
+          >
+            {score} <span className="score-highscore">(high score: {highScore})</span>
           </span>
         </div>
       )}
