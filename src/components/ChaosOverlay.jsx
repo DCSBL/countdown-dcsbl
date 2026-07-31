@@ -169,8 +169,9 @@ export function ChaosOverlay({ stage, intensity }) {
       const size = useGif
         ? gifSizeMin + Math.random() * gifSizeRange
         : 28 + Math.random() * 28
+      const spinCcw = Math.random() < 0.5
 
-      setItems((current) => [...current, { ...item, left, duration, size }])
+      setItems((current) => [...current, { ...item, left, duration, size, spinCcw }])
       setTimeout(() => {
         if (!cancelled) handleNaturalExpiry(id)
       }, duration * 1000)
@@ -211,8 +212,9 @@ export function ChaosOverlay({ stage, intensity }) {
       const left = Math.random() * 90
       const duration = 9 + Math.random() * 4
       const size = 180 + Math.random() * 180
+      const spinCcw = Math.random() < 0.5
 
-      setItems((current) => [...current, { id, type: 'gif', url, left, duration, size }])
+      setItems((current) => [...current, { id, type: 'gif', url, left, duration, size, spinCcw }])
       setTimeout(() => {
         if (!cancelled) handleNaturalExpiry(id)
       }, duration * 1000)
@@ -340,7 +342,7 @@ export function ChaosOverlay({ stage, intensity }) {
           <SafeGif
             key={item.id}
             src={item.url}
-            className={`floating-item floating-gif${item.popped ? ' pop' : ''}`}
+            className={`floating-item floating-gif${item.popped ? ' pop' : ''}${item.spinCcw ? ' spin-ccw' : ''}`}
             style={{
               ...frozenStyle,
               '--duration': `${item.duration}s`,
@@ -351,7 +353,7 @@ export function ChaosOverlay({ stage, intensity }) {
         ) : (
           <span
             key={item.id}
-            className={`floating-item floating-emoji${item.popped ? ' pop' : ''}`}
+            className={`floating-item floating-emoji${item.popped ? ' pop' : ''}${item.spinCcw ? ' spin-ccw' : ''}`}
             style={{
               ...frozenStyle,
               '--duration': `${item.duration}s`,

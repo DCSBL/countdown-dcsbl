@@ -52,7 +52,7 @@ const CLIPPY_LINES = [
 const ROTATE_INTERVAL_MS = 6000
 
 export function Clippy() {
-  const [index, setIndex] = useState(0)
+  const [index, setIndex] = useState(() => Math.floor(Math.random() * CLIPPY_LINES.length))
 
   useEffect(() => {
     const id = setInterval(() => {
