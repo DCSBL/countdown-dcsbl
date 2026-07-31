@@ -85,6 +85,13 @@ const BANNER_BY_STAGE = {
   ],
 };
 
+const POP_SCORE_STORAGE_KEY = 'countdown-pop-score'
+
+function loadPopScore() {
+  const stored = Number(localStorage.getItem(POP_SCORE_STORAGE_KEY))
+  return Number.isFinite(stored) && stored > 0 ? stored : 0
+}
+
 const SPAWN_INTERVAL_MAX_MS = 3800
 const SPAWN_INTERVAL_MIN_MS = 350
 const CONFETTI_BURSTS = 40
@@ -102,6 +109,7 @@ let nextItemId = 0
 
 export function ChaosOverlay({ stage, intensity }) {
   const [items, setItems] = useState([])
+  const [score, setScore] = useState(loadPopScore)
   const intensityRef = useRef(intensity)
   const doneVideoRef = useRef(null)
 
@@ -244,6 +252,40 @@ export function ChaosOverlay({ stage, intensity }) {
     return () => clearInterval(id)
   }, [stage])
 
+  function popItem(id, event) {
+    const rect = event.currentTarget.getBoundingClientRect()
+    const originX = (rect.left + rect.width / 2) / window.innerWidth
+    const originY = (rect.top + rect.height / 2) / window.innerHeight
+
+    confetti({
+      particleCount: 22,
+      spread: 75,
+      startVelocity: 24,
+      gravity: 1.1,
+      scalar: 0.6,
+      ticks: 60,
+      origin: { x: originX, y: originY },
+    })
+
+    setItems((current) =>
+      current.map((entry) =>
+        entry.id === id
+          ? { ...entry, popped: true, freezeLeft: rect.left, freezeTop: rect.top }
+          : entry,
+      ),
+    )
+
+    setTimeout(() => {
+      setItems((current) => current.filter((entry) => entry.id !== id))
+    }, 240)
+
+    setScore((current) => {
+      const next = current + 1
+      localStorage.setItem(POP_SCORE_STORAGE_KEY, String(next))
+      return next
+    })
+  }
+
   const banners = BANNER_BY_STAGE[stage]
 
   return (
@@ -261,24 +303,38 @@ export function ChaosOverlay({ stage, intensity }) {
         />
       )}
 
-      {items.map((item) =>
-        item.type === 'gif' ? (
+      {items.map((item) => {
+        const frozenStyle = item.popped
+          ? { left: `${item.freezeLeft}px`, top: `${item.freezeTop}px` }
+          : { left: `${item.left}%` }
+
+        return item.type === 'gif' ? (
           <SafeGif
             key={item.id}
             src={item.url}
-            className="floating-item floating-gif"
-            style={{ left: `${item.left}%`, '--duration': `${item.duration}s`, width: item.size }}
+            className={`floating-item floating-gif${item.popped ? ' pop' : ''}`}
+            style={{
+              ...frozenStyle,
+              '--duration': `${item.duration}s`,
+              width: item.size,
+            }}
+            onClick={(event) => popItem(item.id, event)}
           />
         ) : (
           <span
             key={item.id}
-            className="floating-item floating-emoji"
-            style={{ left: `${item.left}%`, '--duration': `${item.duration}s`, fontSize: item.size }}
+            className={`floating-item floating-emoji${item.popped ? ' pop' : ''}`}
+            style={{
+              ...frozenStyle,
+              '--duration': `${item.duration}s`,
+              fontSize: item.size,
+            }}
+            onClick={(event) => popItem(item.id, event)}
           >
             {item.char}
           </span>
-        ),
-      )}
+        )
+      })}
 
       {banners && (
         <div className="marquee">
@@ -287,6 +343,14 @@ export function ChaosOverlay({ stage, intensity }) {
               banners.map((line, i) => <span key={`${rep}-${i}`}>{line}</span>),
             )}
           </div>
+        </div>
+      )}
+
+      {score > 0 && (
+        <div className="score-counter">
+          <span key={score} className="score-value">
+            {score}
+          </span>
         </div>
       )}
     </div>

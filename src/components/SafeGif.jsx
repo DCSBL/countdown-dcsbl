@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export function SafeGif({ src, alt = '', className, style }) {
+export function SafeGif({ src, alt = '', className, style, onClick }) {
   const [failed, setFailed] = useState(false)
 
   if (failed) return null
@@ -13,6 +13,7 @@ export function SafeGif({ src, alt = '', className, style }) {
       style={style}
       loading="lazy"
       onError={() => setFailed(true)}
+      onClick={onClick}
     />
   )
 }
